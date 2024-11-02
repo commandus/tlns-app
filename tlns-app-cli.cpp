@@ -8,7 +8,8 @@
 #include "lorawan/proto/payload2device/payload2device-parser.h"
 
 static const char* examples[] = {
-  "db", "hello", "hallo", "hans", "hansekogge", "seamann", "quetzalcoatl", "quit", "power", NULL
+  "db", "hello", "hallo", "hans", "hansekogge", "seamann", "quetzalcoatl", "quit", "power",
+  nullptr
 };
 
 void completionHook (
@@ -33,7 +34,10 @@ static PAYLOAD2DEVICE_COMMAND processInput(
     return p.command;
 }
 
-int main (int argc, char** argv) {
+int main (
+    int argc,
+    char** argv
+) {
     linenoiseInstallWindowChangeHandler();
     const std::string historyFileName (getHomeDir() + "/tlns-app-cli.history");
 

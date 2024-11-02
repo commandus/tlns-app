@@ -122,7 +122,7 @@ PAYLOAD2DEVICE_COMMAND Payload2DeviceParser::parse(
                         } else {
                             switch (state) {
                                 case PAYLOAD2DEVICE_PARSER_STATE_ADDRESS:
-                                    addresses.push_back(DEVADDR(token));
+                                    addresses.emplace_back(token);
                                     break;
                                 case PAYLOAD2DEVICE_PARSER_STATE_FPORT:
                                     fport = (uint8_t) strtoul(token.c_str(), nullptr, 10);
