@@ -4,6 +4,12 @@
 
 std::string &trim(std::string &s);
 
+// Concatenate two words and place ONE space between them
+std::string concatenateWordsWithSpace(
+    const std::string &sLeft,
+    const std::string &sRight
+);
+
 /**
  * Text representation helper functions. Most of them return text representation for LoRaWAN values like
  * keys, EUI, spreading factor, frequency etc.
@@ -15,6 +21,8 @@ std::string &trim(std::string &s);
 std::string replaceAll(std::string str, const std::string& from, const std::string& to);
 
 std::string uint64_t2string(const uint64_t &value);
+
+bool isDec(const std::string &value);
 
 bool isHex(const std::string &value);
 
