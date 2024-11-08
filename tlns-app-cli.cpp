@@ -1,6 +1,8 @@
 #include <cstring>
 #include <cstdlib>
 #include <iostream>
+#include <thread>
+#include <unistd.h>
 
 #include "linenoise.h"
 
@@ -95,6 +97,15 @@ static PAYLOAD2DEVICE_COMMAND processInput(
     return p.command;
 }
 
+static void run(
+    bool *running
+) {
+    while(*running) {
+        // std::cout << "--" << std::endl;
+        sleep(10);
+    }
+}
+
 int main (
     int argc,
     char** argv
@@ -105,6 +116,9 @@ int main (
     linenoiseHistoryLoad(historyFileName.c_str());
 
     char const* prompt = "tlns> ";
+
+    bool running = true;
+    std::thread t(run, &running);
 
     while (true) {
         char* l = linenoise(prompt);
@@ -118,4 +132,6 @@ int main (
         }
     }
     linenoiseHistorySave(historyFileName.c_str());
+    running = false;
+    t.join();
 }
