@@ -13,7 +13,7 @@ static std::string now;
 static std::string lastExpression;
 static Payload2DeviceParser parser;
 
-static char* HINTS[] {
+static const char* HINTS_VALUE[] {
     "",                     // PAYLOAD2DEVICE_PARSER_STATE_START
     " <address> payload",   // PAYLOAD2DEVICE_PARSER_STATE_COMMAND
     " <address> payload",   // PAYLOAD2DEVICE_PARSER_STATE_ADDRESS
@@ -22,6 +22,17 @@ static char* HINTS[] {
     " <hex-string>",        // PAYLOAD2DEVICE_PARSER_STATE_FOPTS
     "YYYY-MM-DDThh:mm:ss+ZONE",// PAYLOAD2DEVICE_PARSER_STATE_TIME
     " 0..255"               // PAYLOAD2DEVICE_PARSER_STATE_PROTO
+};
+
+static const char* HINTS_RESERVED_WORDS[] {
+    "",                     // PAYLOAD2DEVICE_PARSER_STATE_START
+    "",                     // PAYLOAD2DEVICE_PARSER_STATE_COMMAND
+    " payload",             // PAYLOAD2DEVICE_PARSER_STATE_ADDRESS
+    " fport",               // PAYLOAD2DEVICE_PARSER_STATE_FPORT
+    " payload",             // PAYLOAD2DEVICE_PARSER_STATE_PAYLOAD
+    " fopts",               // PAYLOAD2DEVICE_PARSER_STATE_FOPTS
+    " at",// PAYLOAD2DEVICE_PARSER_STATE_TIME
+    " proto"               // PAYLOAD2DEVICE_PARSER_STATE_PROTO
 };
 
 static char *hintsHook(
@@ -42,61 +53,21 @@ static char *hintsHook(
                 default:
                     *color = 93;
                     *bold = 0;
-                    return HINTS[parser.lastSendOption];
+                    return (char *) HINTS_VALUE[parser.lastSendOption];
             }
         } else {
-            if (parser.lastSendOption == PAYLOAD2DEVICE_PARSER_STATE_ADDRESS) {
-                *color = 32;
-                *bold = 1;
-                return " payload";
-            }
-            if (!parser.hasSendOptionName(PAYLOAD2DEVICE_PARSER_STATE_ADDRESS)) {
-                *color = 32;
-                *bold = 1;
-                return " <address>";
-            }
-            if (!parser.hasSendOptionName(PAYLOAD2DEVICE_PARSER_STATE_PAYLOAD)) {
-                *color = 32;
-                *bold = 0;
-                return " payload";
-            }
-            if (!parser.hasSendOptionName(PAYLOAD2DEVICE_PARSER_STATE_FOPTS)) {
-                *color = 32;
-                *bold = 1;
-                return " fopts";
-            }
-            if (!parser.hasSendOptionName(PAYLOAD2DEVICE_PARSER_STATE_FPORT)) {
-                *color = 32;
-                *bold = 1;
-                return " fport";
-            }
-            if (!parser.hasSendOptionName(PAYLOAD2DEVICE_PARSER_STATE_TIME)) {
-                *color = 32;
-                *bold = 1;
-                return " at";
-            }
-            if (!parser.hasSendOptionName(PAYLOAD2DEVICE_PARSER_STATE_PROTO)) {
-                *color = 32;
-                *bold = 1;
-                return " proto";
-            }
+            *color = 32;
+            *bold = 1;
+            return (char *) HINTS_RESERVED_WORDS[parser.lastSendOption];
         }
     }
     return nullptr;
 }
 
 static const char *CMDS[] {
-        "ping",     // 0
-        "send",     // 1
-        "quit"      // 2
-};
-
-static const char *SEND_OPTIONS[] {
-        "payload",  // 0
-        "fopts",    // 1
-        "at",       // 2
-        "fport",    // 3
-        "proto"     // 4
+    "ping",     // 0
+    "send",     // 1
+    "quit"      // 2
 };
 
 static void completionHook (
