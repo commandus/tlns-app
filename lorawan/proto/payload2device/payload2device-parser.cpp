@@ -80,20 +80,25 @@ PAYLOAD2DEVICE_COMMAND Payload2DeviceParser::parse(
     std::string token(expression + start, finish - start);
     if (token == RESERVED_WORDS[0]) {   // "send"
         command = PAYLOAD2DEVICE_COMMAND_SEND;
+        state = PAYLOAD2DEVICE_PARSER_STATE_COMMAND;
+        lastSendOption = PAYLOAD2DEVICE_PARSER_STATE_COMMAND;
         setFlagSendOptionName(PAYLOAD2DEVICE_PARSER_STATE_COMMAND);
     } else {
         if (token == RESERVED_WORDS[1]) {   // "ping"
             command = PAYLOAD2DEVICE_COMMAND_PING;
+            state = PAYLOAD2DEVICE_PARSER_STATE_COMMAND;
+            lastSendOption = PAYLOAD2DEVICE_PARSER_STATE_COMMAND;
             setFlagSendOptionName(PAYLOAD2DEVICE_PARSER_STATE_COMMAND);
             return command;
         } else if (token == RESERVED_WORDS[2]) { // "quit"
             command = PAYLOAD2DEVICE_COMMAND_QUIT;
+            state = PAYLOAD2DEVICE_PARSER_STATE_COMMAND;
+            lastSendOption = PAYLOAD2DEVICE_PARSER_STATE_COMMAND;
             setFlagSendOptionName(PAYLOAD2DEVICE_PARSER_STATE_COMMAND);
             return command;
         } else
             return command;             // none
     }
-    state = PAYLOAD2DEVICE_PARSER_STATE_COMMAND;
 
     // read send options
     while (finish < size ) {
@@ -119,6 +124,7 @@ PAYLOAD2DEVICE_COMMAND Payload2DeviceParser::parse(
 
         // by default address
         state = PAYLOAD2DEVICE_PARSER_STATE_ADDRESS;
+        lastSendOption = PAYLOAD2DEVICE_PARSER_STATE_ADDRESS;
 
         if (token == RESERVED_WORDS[4]) { // "fport"
             state = PAYLOAD2DEVICE_PARSER_STATE_FPORT;
@@ -304,7 +310,7 @@ bool Payload2DeviceParser::canInsertAddress() const
                      && ((flagsStateClause & (1 << PAYLOAD2DEVICE_PARSER_STATE_PROTO)) == 0);
 }
 
-std::string Payload2DeviceParser::complition(
+std::string Payload2DeviceParser::completion(
     const std::string &expression
 )
 {
@@ -325,7 +331,17 @@ std::string Payload2DeviceParser::complition(
     }
 
     if (!parser.hasSendOptionValue(parser.lastSendOption)) {
-        // add value
+        // add default value if possible
+        switch (parser.lastSendOption) {
+            case PAYLOAD2DEVICE_PARSER_STATE_FPORT:
+                return concatenateWordsWithSpace(expression, "1");
+            case PAYLOAD2DEVICE_PARSER_STATE_PROTO:
+                return concatenateWordsWithSpace(expression, "0");
+            case PAYLOAD2DEVICE_PARSER_STATE_TIME:
+                return concatenateWordsWithSpace(expression, time2string(time(nullptr)));
+            default:
+                break;
+        }
         return expression;
     }
 

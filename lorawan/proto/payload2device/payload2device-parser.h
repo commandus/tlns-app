@@ -54,7 +54,7 @@ public:
     bool hasSendOptionValue(PAYLOAD2DEVICE_PARSER_STATE state);
     bool canInsertAddress() const;
 
-    static std::string complition(const std::string &expression);
+    static std::string completion(const std::string &expression);
 };
 
 #endif
