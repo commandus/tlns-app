@@ -10,6 +10,8 @@
 #include "lorawan/proto/payload2device/payload2device-parser.h"
 #include "lorawan/lorawan-string.h"
 #include "lorawan/lorawan-date.h"
+#include "lorawan/lorawan-error.h"
+
 
 static std::string now;
 static std::string lastExpression;
@@ -106,23 +108,71 @@ static void run(
     }
 }
 
-int main (
-    int argc,
-    char** argv
+// Asynchronous mode using the multiplexing API
+static int cliOutput(
+    char const* prompt,
+    const char *historyFileName
 ) {
-    const std::string historyFileName (getHomeDir() + "/tlns-app-cli.history");
     linenoiseSetCompletionCallback(completionHook);
     linenoiseSetHintsCallback(hintsHook);
-    linenoiseHistoryLoad(historyFileName.c_str());
-
-    char const* prompt = "tlns> ";
+    linenoiseHistoryLoad(historyFileName);
 
     bool running = true;
     std::thread t(run, &running);
 
     while (true) {
-        char* l = linenoise(prompt);
+        struct linenoiseState ls;
+        char buf[1024];
+        char *l;
+        linenoiseEditStart(&ls, -1, -1, buf, sizeof(buf), prompt);
+        while (true) {
+            fd_set readFds;
+            struct timeval tv;
 
+            FD_SET(ls.ifd, &readFds);
+            tv.tv_sec = 1; // 1 sec timeout
+            tv.tv_usec = 0;
+
+            int r = select(ls.ifd + 1, &readFds, nullptr, nullptr, &tv);
+            l = nullptr;
+            if (r == -1) {
+                return ERR_CODE_SELECT;
+            } else if (r) {
+                l = linenoiseEditFeed(&ls);
+                // A NULL return means: line editing is continuing. Otherwise, the user hit enter or stopped editing (CTRL+C/D)
+                if (l != linenoiseEditMore)
+                    break;
+            } else {
+                // Timeout occurred
+            }
+
+        }
+        linenoiseEditStop(&ls);
+
+        if (l) {
+            linenoiseHistoryAdd(l);
+            auto cmd = processInput(l);
+            free(l);
+            if (cmd == PAYLOAD2DEVICE_COMMAND_QUIT)
+                break;
+        }
+    }
+    linenoiseHistorySave(historyFileName);
+    running = false;
+    t.join();
+}
+
+static int cliNoOutput(
+    char const* prompt,
+    const char *historyFileName
+) {
+
+    linenoiseSetCompletionCallback(completionHook);
+    linenoiseSetHintsCallback(hintsHook);
+    linenoiseHistoryLoad(historyFileName);
+
+    while (true) {
+        char* l = linenoise(prompt);
         if (l) {
             auto cmd = processInput(l);
             linenoiseHistoryAdd(l);
@@ -131,7 +181,15 @@ int main (
                 break;
         }
     }
-    linenoiseHistorySave(historyFileName.c_str());
-    running = false;
-    t.join();
+    linenoiseHistorySave(historyFileName);
+}
+
+int main (
+    int argc,
+    char** argv
+) {
+    char const* prompt = "tlns> ";
+    const std::string historyFileName(getHomeDir() + "/tlns-app-cli.history");
+    // return cliNoOutput(prompt, historyFileName.c_str());
+    return cliOutput(prompt, historyFileName.c_str());
 }
