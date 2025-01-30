@@ -25,8 +25,7 @@ namespace file {
 	 * @return count files
 	 * FreeBSD fts.h fts_*()
 	 */
-	size_t filesInPath
-	(
+	size_t filesInPath(
 		const std::string &path,
 		const std::string &suffix,
 		int flags,
@@ -35,6 +34,27 @@ namespace file {
 
     bool fileExists(const std::string &fileName);
     std::string expandFileName(const std::string &relativeName);
+
+	/**
+	 * @brief Return is file ordinal. If not, it is directory or special file.
+	 *
+	 * @param reModificationTime return modofication time
+	 * @param path directory or file path
+	 * @return true - ordinal file
+	 * @return false - directory ot special file
+	 */
+	bool isOrdinalFile(
+		time_t &reModificationTime,
+		const char *path
+	);
+
+	/**
+	 * Return true if file name extension is .json
+	 * @param path file name to examine
+	 * @return true if file name extension is .json
+	 */
+	bool fileIsJSON(const std::string &path);
+
 }
 
 /**
@@ -62,5 +82,6 @@ public:
 
 std::string getCurrentDir();
 std::string getHomeDir();
+std::string getProgramDir();
 
 #endif
